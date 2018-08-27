@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System;
 using UnityEngine.SceneManagement;
 using OpenCvSharp;
+using System.IO;
 
 namespace VideoDetectorExample
 {
@@ -18,6 +19,7 @@ namespace VideoDetectorExample
         OpenCvSharp.ORB _detector;
         OpenCvSharp.KeyPoint[] _keypoints;
         Renderer _frameRendere;
+        string _screenshotFolder;
 
         // Use this for initialization
         void Start ()
@@ -29,6 +31,12 @@ namespace VideoDetectorExample
             _detector = OpenCvSharp.ORB.Create (500);
             _detector.MaxFeatures = 1000;
             _keypoints = new OpenCvSharp.KeyPoint[] { };
+
+            _screenshotFolder = Application.persistentDataPath + "/Screenshot/";
+            if (!Directory.Exists(_screenshotFolder))
+            {
+                Directory.CreateDirectory(_screenshotFolder);
+            }
         }
 
         /// <summary>
@@ -105,7 +113,7 @@ namespace VideoDetectorExample
                 OpenCvSharp.Cv2.DrawKeypoints(_rgbMat, _keypoints, rgbaMat, OpenCvSharp.Scalar.All(-1), OpenCvSharp.DrawMatchesFlags.NotDrawSinglePoints);
 
                 OpenCvSharp.Cv2.Rectangle(rgbaMat, _patternRect.TopLeft, _patternRect.BottomRight, new OpenCvSharp.Scalar(255, 0, 0, 255), 5);
-                _previewTex2d = VideoDetectorExample.Utils.MatToTexture2D(rgbaMat);
+                _previewTex2d = Utils.MatToTexture2D(rgbaMat);
                 _frameRendere.material.mainTexture = _previewTex2d;
             }
         }
@@ -145,7 +153,7 @@ namespace VideoDetectorExample
 
             Texture2D patternTexture = new Texture2D (patternMat.Width, patternMat.Height, TextureFormat.RGBA32, false);
 
-            patternTexture = VideoDetectorExample.Utils.MatToTexture2D (patternMat);
+            patternTexture = Utils.MatToTexture2D (patternMat);
             
             PatternRawImage.texture = patternTexture;
 
@@ -160,10 +168,10 @@ namespace VideoDetectorExample
             if (PatternRawImage.texture != null) {
                 Texture2D patternTexture = (Texture2D)PatternRawImage.texture;
                 OpenCvSharp.Mat patternMat = new OpenCvSharp.Mat (_patternRect.Size, OpenCvSharp.MatType.CV_8UC3);
-                patternMat = VideoDetectorExample.Utils.Texture2DToMat (patternTexture);
+                patternMat = Utils.Texture2DToMat (patternTexture);
                 OpenCvSharp.Cv2.CvtColor(patternMat, patternMat, OpenCvSharp.ColorConversionCodes.RGB2BGR);
 
-                string savePath = Application.persistentDataPath + "/Screenshot/" + DateTime.Now.ToString("hh_mm_ss") + "_patternImg.png";
+                string savePath = _screenshotFolder + DateTime.Now.ToString("hh_mm_ss") + "_patternImg.png";
                 Debug.Log ("savePath " + savePath);
             
                 OpenCvSharp.Cv2.ImWrite(savePath, patternMat);
